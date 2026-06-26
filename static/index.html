@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>프롬프트 빌더</title>
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🎨 프롬프트 빌더</div>
+    <nav class="tabbar">
+      <button class="tab active" data-tab="builder">자유 빌더(채팅)</button>
+      <button class="tab" data-tab="generator">프롬프트 생성기</button>
+      <button class="tab" data-tab="archive">보관함</button>
+    </nav>
+    <div class="top-actions">
+      <input id="userName" class="name-input" type="text" placeholder="이름(선택)" />
+      <button id="newChatBtn" class="btn ghost">새 대화</button>
+      <button id="settingsBtn" class="btn ghost" title="설정">⚙ 설정</button>
+    </div>
+  </header>
+
+  <!-- ───────── 탭 1: 자유 빌더(채팅) ───────── -->
+  <section class="panel builder-panel" data-panel="builder">
+    <aside class="preset-sidebar">
+      <div class="sidebar-head">
+        <span>프리셋</span>
+        <button id="reloadPresets" class="btn ghost mini" title="새로고침">↻</button>
+      </div>
+      <div class="hint">고르면 「프롬프트 생성기」 탭의 옵션이 자동 세팅됩니다.</div>
+      <div id="presetSidebarList" class="preset-side-list"></div>
+    </aside>
+
+    <div class="builder-main">
+      <main class="chat" id="chat">
+        <div class="msg bot">
+          <div class="bubble">
+            안녕하세요! 만들고 싶은 이미지의 <b>레퍼런스</b>를 첨부하거나 설명해 주세요.
+            대화로 다듬은 뒤 <b>「프롬프트 마감」</b>을 누르면 이미지 스튜디오에 바로 붙일 최종 프롬프트가 확정됩니다.
+            <div class="hint">📎 참고 이미지 첨부 · 왼쪽에서 프리셋 선택 · 빠른 산출은 「프롬프트 생성기」 탭.</div>
+          </div>
+        </div>
+      </main>
+
+      <div class="attach-preview" id="attachPreview"></div>
+
+      <form class="composer" id="composer">
+        <button type="button" id="attachBtn" class="btn ghost" title="레퍼런스 첨부">📎</button>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden />
+        <textarea id="input" rows="1" placeholder="메시지를 입력하세요… (Shift+Enter 줄바꿈)"></textarea>
+        <button type="button" id="finalizeBtn" class="btn finalize" title="최종 프롬프트 확정">✓ 프롬프트 마감</button>
+        <button type="submit" id="sendBtn" class="btn primary">전송</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ───────── 탭 2: 프롬프트 생성기(구조화) ───────── -->
+  <section class="panel generator-panel hidden" data-panel="generator">
+    <aside class="preset-sidebar">
+      <div class="sidebar-head">
+        <span>프리셋</span>
+        <button class="btn ghost mini reloadPresets" title="새로고침">↻</button>
+      </div>
+      <div class="hint">고르면 아래 옵션이 자동 세팅됩니다.</div>
+      <div class="preset-side-list"></div>
+    </aside>
+
+    <div class="gen-main">
+      <div class="gen-grid">
+        <div class="gen-field span2">
+          <label>1. 원고 파일 (PDF·문서에서 텍스트 추출)</label>
+          <div id="genDrop" class="dropzone">
+            <input type="file" id="genFile"
+                   accept=".pdf,.txt,.md,.markdown,.csv,.json,.docx,.hwpx,.pptx" multiple hidden />
+            <div class="dz-inner">
+              📄 원고 파일을 끌어다 놓거나 <button type="button" id="genPick" class="btn">파일 선택</button>
+              <span class="hint">PDF · TXT · MD · DOCX · HWPX · PPTX</span>
+            </div>
+          </div>
+          <div id="genFileList" class="file-list"></div>
+        </div>
+
+        <div class="gen-field row"><label>2. 용도</label><div class="btn-group" id="grpPurpose"></div></div>
+        <div class="gen-field row"><label>3. 톤</label><div class="btn-group" id="grpTone"></div></div>
+
+        <div class="gen-field span2 row">
+          <label>4. 색</label>
+          <div class="btn-group" id="grpColor"></div>
+          <input type="text" id="genColorCustom" class="color-custom" placeholder="직접 지정(예: 차콜+오렌지 #E8732A)" />
+        </div>
+
+        <div class="gen-field span2 row"><label>5. 스타일</label><div class="btn-group" id="grpPreset"></div></div>
+
+        <div class="gen-field row">
+          <label>6. 컷 수</label>
+          <div class="btn-group" id="grpCuts"></div>
+        </div>
+        <div class="gen-field row"><label>7. 메모</label><textarea id="genNote" rows="1" placeholder="꼭 넣을 문구·강조어·금지사항 등"></textarea></div>
+
+        <div class="span2"><span id="cutRecommend" class="muted"></span><span id="cutMsg" class="cut-msg"></span></div>
+
+        <button id="genConfirm" class="btn finalize big span2">✓ 확정 — 프롬프트 만들기</button>
+
+        <details class="save-preset span2">
+          <summary>＋ 현재 옵션을 프리셋으로 저장</summary>
+          <form id="presetForm" class="preset-form">
+            <label>프리셋 이름<input id="pName" type="text" placeholder="예: 카드뉴스8장" /></label>
+            <label>설명(선택)<input id="pDesc" type="text" placeholder="한 줄 설명" /></label>
+            <label>커버 이미지(선택)<input id="pCover" type="file" accept="image/*" /></label>
+            <button type="submit" class="btn primary">현재 선택값으로 저장</button>
+            <span id="presetFormMsg" class="muted"></span>
+          </form>
+        </details>
+
+        <div class="gen-result-wrap span2">
+          <h3>결과</h3>
+          <div id="genResult" class="gen-result">
+            <p class="muted">옵션을 고르고 「확정」을 누르면 여기에 최종 프롬프트가 나옵니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 탭 3: 보관함 (게시판) ───────── -->
+  <section class="panel archive-panel hidden" data-panel="archive">
+    <div class="archive-wrap">
+      <div class="archive-head">
+        <h2>보관함</h2>
+        <button id="reloadArchives" class="btn ghost mini" title="새로고침">↻</button>
+      </div>
+      <p class="muted">생성기에서 「📌 보관」한 프롬프트가 여기 게시판에 쌓입니다. 열어서 복사·다운로드하거나 삭제하세요.</p>
+      <div id="archiveList" class="archive-list"></div>
+    </div>
+  </section>
+
+  <!-- ───────── 설정 (페이지) ───────── -->
+  <section class="panel settings-page hidden" data-panel="settings">
+   <div class="settings-panel" id="settingsPanel">
+    <div class="settings-head">
+      <h2>설정</h2>
+      <button id="closeSettingsX" class="btn ghost" title="돌아가기">← 돌아가기</button>
+    </div>
+    <label>프로바이더</label>
+    <div class="provider-toggle" id="setProvider">
+      <button type="button" class="opt" data-provider="litellm">회사 LiteLLM</button>
+      <button type="button" class="opt" data-provider="xiaomi">샤오미 MiMo (직접)</button>
+    </div>
+    <label>게이트웨이 URL
+      <input id="setUrl" type="text" placeholder="http://(사내 게이트웨이 주소):4000" />
+    </label>
+    <label>API 키
+      <input id="setKey" type="password" placeholder="비워두면 기존 키 유지" />
+      <span class="muted" id="keyState"></span>
+    </label>
+    <label>텍스트 모델 (대화/프롬프트)
+      <input id="setChatModel" type="text" placeholder="deepseek-v4-flash" />
+    </label>
+    <label>비전 모델 (이미지 분석)
+      <input id="setVisionModel" type="text" placeholder="MiMo-V2.5" />
+    </label>
+
+    <div class="settings-actions">
+      <button id="testBtn" class="btn">연결 확인</button>
+      <button id="saveBtn" class="btn primary">저장</button>
+      <button id="closeSettings" class="btn ghost">닫기</button>
+    </div>
+    <div class="test-result" id="testResult"></div>
+   </div>
+  </section>
+
+  <script src="/app.js"></script>
+</body>
+</html>

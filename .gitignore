@@ -1,0 +1,26 @@
+# secrets / local config
+.env
+settings.json
+
+# user data (런타임 생성물)
+archives.json
+
+# 기획/내부 문서 (비공개)
+_context/
+*.zip
+
+# 사용자가 만든 프리셋은 공개 저장소에 올리지 않음 (예시 샘플만 포함)
+presets/*
+!presets/_README.md
+!presets/샘플_카드뉴스_8컷/
+!presets/샘플_카드뉴스_8컷/**
+
+# python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# os
+.DS_Store
+Thumbs.db
